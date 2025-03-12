@@ -1,6 +1,22 @@
-# Lưu trữ thông tin sách trong một danh sách
-book_collection = []
+import tkinter as tk
+from tkinter import messagebox, simpledialog
+import json
 
+# Lưu trữ thông tin sách vào file
+def save_books():
+    with open('book_collection.json', 'w') as file:
+        json.dump(book_collection, file)
+
+# Đọc thông tin sách từ file
+def load_books():
+    global book_collection
+    try:
+        with open('book_collection.json', 'r') as file:
+            book_collection = json.load(file)
+    except FileNotFoundError:
+        book_collection = []
+
+# Thêm sách mới vào danh sách
 def add_book(book_id, title, author, release_date, genre):
     book = {
         'id': book_id,
@@ -10,34 +26,57 @@ def add_book(book_id, title, author, release_date, genre):
         'genre': genre
     }
     book_collection.append(book)
+    save_books()
 
+# Tìm kiếm sách theo từ khóa
 def search_books(keyword):
-    result = [book for book in book_collection if keyword.lower() in book['title'].lower() or 
-                                                  keyword.lower() in book['author'].lower() or
-                                                  keyword.lower() in book['genre'].lower()]
+    result = [book for book in book_collection if keyword.lower() in book['title'].lower() or
+                                                keyword.lower() in book['author'].lower() or
+                                                keyword.lower() in book['genre'].lower()]
     return result
 
-#Giao diện người dùng
-import tkinter as tk
-from tkinter import messagebox
-
+# Giao diện người dùng
 def add_book_gui():
     book_id = id_entry.get()
     title = title_entry.get()
     author = author_entry.get()
     release_date = release_date_entry.get()
     genre = genre_entry.get()
+
+    if not all([book_id, title, author, release_date, genre]):
+        messagebox.showwarning("Cảnh báo", "Vui lòng điền đầy đủ thông tin!")
+        return
+
     add_book(book_id, title, author, release_date, genre)
     messagebox.showinfo("Thông báo", "Sách đã được thêm thành công!")
+    id_entry.delete(0, tk.END)
+    title_entry.delete(0, tk.END)
+    author_entry.delete(0, tk.END)
+    release_date_entry.delete(0, tk.END)
+    genre_entry.delete(0, tk.END)
 
+def search_books_gui():
+    keyword = simpledialog.askstring("Tìm kiếm sách", "Nhập từ khóa tìm kiếm:")
+    if not keyword:
+        return
+
+    results = search_books(keyword)
+    if results:
+        result_text = "\n".join([f"ID: {book['id']}, Tiêu đề: {book['title']}, Tác giả: {book['author']}" for book in results])
+        messagebox.showinfo("Kết quả tìm kiếm", result_text)
+    else:
+        messagebox.showinfo("Kết quả tìm kiếm", "Không tìm thấy sách nào phù hợp.")
+
+# Tạo cửa sổ chính
 root = tk.Tk()
 root.title("Quản lý Sách Điện Tử")
 
-tk.Label(root, text="ID sách").grid(row=0)
-tk.Label(root, text="Tiêu đề").grid(row=1)
-tk.Label(root, text="Tác giả").grid(row=2)
-tk.Label(root, text="Ngày phát hành").grid(row=3)
-tk.Label(root, text="Thể loại").grid(row=4)
+# Các nhãn và ô nhập liệu
+tk.Label(root, text="ID sách").grid(row=0, column=0)
+tk.Label(root, text="Tiêu đề").grid(row=1, column=0)
+tk.Label(root, text="Tác giả").grid(row=2, column=0)
+tk.Label(root, text="Ngày phát hành").grid(row=3, column=0)
+tk.Label(root, text="Thể loại").grid(row=4, column=0)
 
 id_entry = tk.Entry(root)
 title_entry = tk.Entry(root)
@@ -51,30 +90,10 @@ author_entry.grid(row=2, column=1)
 release_date_entry.grid(row=3, column=1)
 genre_entry.grid(row=4, column=1)
 
+# Các nút
 tk.Button(root, text='Thêm sách', command=add_book_gui).grid(row=5, column=0, columnspan=2)
+tk.Button(root, text='Tìm kiếm sách', command=search_books_gui).grid(row=6, column=0, columnspan=2)
 
+# Nạp dữ liệu sách từ file khi khởi động
+load_books()
 root.mainloop()
-
-#Tìm kiếm sách
-def search_books(keyword):
-    result = [book for book in book_collection if keyword.lower() in book['title'].lower() or 
-                                                keyword.lower() in book['author'].lower() or
-                                                keyword.lower() in book['genre'].lower()]
-    return result
-
-#Thêm sách mới
-def add_book(book_id, title, author, release_date, genre):
-    book = {
-        'id': book_id,
-        'title': title,
-        'author': author,
-        'release_date': release_date,
-        'genre': genre
-    }
-    book_collection.append(book)
-
-#Lưu trữ thông tin sách
-book_collection = []
-
-def add_book(book):
-    book_collection.append(book)
